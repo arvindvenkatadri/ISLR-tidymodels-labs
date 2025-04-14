@@ -1,9 +1,13 @@
 # Moving Beyond Linearity
 
 
+
+
 ::: {.cell}
 
 :::
+
+
 
 
 This lab will look at the various ways we can introduce non-linearity into our model by doing preprocessing. Methods include: polynomials expansion, step functions, and splines.
@@ -11,6 +15,8 @@ This lab will look at the various ways we can introduce non-linearity into our m
 The GAMs section is WIP since they are now supported in [parsnip](https://github.com/tidymodels/parsnip/pull/512).
 
 This chapter will use [parsnip](https://www.tidymodels.org/start/models/) for model fitting and [recipes and workflows](https://www.tidymodels.org/start/recipes/) to perform the transformations.
+
+
 
 
 ::: {.cell}
@@ -24,11 +30,15 @@ Wage <- as_tibble(Wage)
 :::
 
 
+
+
 ## Polynomial Regression and Step Functions
 
 Polynomial regression can be thought of as doing polynomial expansion on a variable and passing that expansion into a linear regression model. We will be very explicit in this formulation in this chapter. `step_poly()` allows us to do a polynomial expansion on one or more variables.
 
 The following step will take `age` and replace it with the variables `age`, `age^2`, `age^3`, and `age^4` since we set `degree = 4`.
+
+
 
 
 ::: {.cell}
@@ -40,7 +50,11 @@ rec_poly <- recipe(wage ~ age, data = Wage) %>%
 :::
 
 
+
+
 This recipe is combined with a linear regression specification and combined to create a workflow object.
+
+
 
 
 ::: {.cell}
@@ -57,7 +71,11 @@ poly_wf <- workflow() %>%
 :::
 
 
+
+
 This object can now be `fit()`
+
+
 
 
 ::: {.cell}
@@ -68,6 +86,7 @@ poly_fit
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 ══ Workflow [trained] ══════════════════════════════════════════════════════════
 Preprocessor: Recipe
@@ -87,11 +106,17 @@ Coefficients:
 (Intercept)   age_poly_1   age_poly_2   age_poly_3   age_poly_4  
      111.70       447.07      -478.32       125.52       -77.91  
 ```
+
+
 :::
 :::
+
+
 
 
 And we cal pull the coefficients using `tidy()`
+
+
 
 
 ::: {.cell}
@@ -101,6 +126,7 @@ tidy(poly_fit)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 5 × 5
   term        estimate std.error statistic  p.value
@@ -111,11 +137,17 @@ tidy(poly_fit)
 4 age_poly_3     126.     39.9        3.14 1.68e- 3
 5 age_poly_4     -77.9    39.9       -1.95 5.10e- 2
 ```
+
+
 :::
 :::
+
+
 
 
 I was lying when I said that `step_poly()` returned `age`, `age^2`, `age^3`, and `age^4`. What is happening is that it returns variables that are a basis of orthogonal polynomials, which means that each of the columns is a linear combination of the variables `age`, `age^2`, `age^3`, and `age^4`. We can see this by using `poly()` directly with `raw = FALSE` since it is the default
+
+
 
 
 ::: {.cell}
@@ -125,6 +157,7 @@ poly(1:6, degree = 4, raw = FALSE)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
               1          2          3          4
 [1,] -0.5976143  0.5455447 -0.3726780  0.1889822
@@ -145,12 +178,18 @@ attr(,"degree")
 attr(,"class")
 [1] "poly"   "matrix"
 ```
+
+
 :::
 :::
+
+
 
 
 We see that these variables don't directly have a format we would have assumed. But this is still a well-reasoned transformation.
 We can get the raw polynomial transformation by setting `raw = TRUE`
+
+
 
 
 ::: {.cell}
@@ -160,6 +199,7 @@ poly(1:6, degree = 4, raw = TRUE)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
      1  2   3    4
 [1,] 1  1   1    1
@@ -173,14 +213,20 @@ attr(,"degree")
 attr(,"class")
 [1] "poly"   "matrix"
 ```
+
+
 :::
 :::
+
+
 
 
 These transformations align with what we would expect. It is still recommended to stick with the default of `raw = FALSE` unless you have a reason not to do that.
 One of the benefits of using `raw = FALSE` is that the resulting variables are uncorrelated which is a desirable quality when using a linear regression model.
 
 You can get the raw polynomials by setting `options = list(raw = TRUE)` in `step_poly()`
+
+
 
 
 ::: {.cell}
@@ -199,6 +245,7 @@ tidy(raw_poly_fit)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 5 × 5
   term            estimate  std.error statistic  p.value
@@ -209,11 +256,17 @@ tidy(raw_poly_fit)
 4 age_poly_3     0.00681    0.00307        2.22 0.0264  
 5 age_poly_4    -0.0000320  0.0000164     -1.95 0.0510  
 ```
+
+
 :::
 :::
+
+
 
 
 Let us try something new and visualize the polynomial fit on our data. We can do this easily because we only have 1 predictor and 1 response. Starting with creating a tibble with different ranges of `age`. Then we take this tibble and predict with it, this will give us the repression curve. We are additionally adding confidence intervals by setting `type = "conf_int"` which we can do since we are using a linear regression model.
+
+
 
 
 ::: {.cell}
@@ -229,27 +282,34 @@ regression_lines
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 63 × 4
-     age .pred .pred_lower .pred_upper
-   <int> <dbl>       <dbl>       <dbl>
- 1    18  51.9        41.5        62.3
- 2    19  58.5        49.9        67.1
- 3    20  64.6        57.5        71.6
- 4    21  70.2        64.4        76.0
- 5    22  75.4        70.5        80.2
- 6    23  80.1        76.0        84.2
- 7    24  84.5        80.9        88.1
- 8    25  88.5        85.2        91.7
- 9    26  92.1        89.1        95.2
-10    27  95.4        92.5        98.4
+   .pred   age .pred_lower .pred_upper
+   <dbl> <int>       <dbl>       <dbl>
+ 1  51.9    18        41.5        62.3
+ 2  58.5    19        49.9        67.1
+ 3  64.6    20        57.5        71.6
+ 4  70.2    21        64.4        76.0
+ 5  75.4    22        70.5        80.2
+ 6  80.1    23        76.0        84.2
+ 7  84.5    24        80.9        88.1
+ 8  88.5    25        85.2        91.7
+ 9  92.1    26        89.1        95.2
+10  95.4    27        92.5        98.4
 # ℹ 53 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 We will then use `ggplot2` to visualize the fitted line and confidence interval. The green line is the regression curve and the dashed blue lines are the confidence interval.
+
+
 
 
 ::: {.cell}
@@ -276,9 +336,13 @@ around.' width=672}
 :::
 
 
+
+
 The regression curve is now a curve instead of a line as we would have gotten with a simple linear regression model. Notice furthermore that the confidence bands are tighter when there is a lot of data and they wider towards the ends of the data.
 
 Let us take that one step further and see what happens to the regression line once we go past the domain it was trained on. the previous plot showed individuals within the age range 18-80. Let us see what happens once we push this to 18-100. This is not an impossible range but an unrealistic range.
+
+
 
 
 ::: {.cell}
@@ -314,9 +378,13 @@ quickly move away from the green curve.' width=672}
 :::
 
 
+
+
 And we see that the curve starts diverging once we get to 93 the predicted `wage` is negative. The confidence bands also get wider and wider as we get farther away from the data.
 
 We can also think of this problem as a classification problem, and we will do that just now by setting us the task of predicting whether an individual earns more than $250000 per year. We will add a new factor value denoting this response.
+
+
 
 
 ::: {.cell}
@@ -330,8 +398,12 @@ Wage <- Wage %>%
 :::
 
 
+
+
 We cannot use the polynomial expansion recipe `rec_poly` we created earlier since it had `wage` as the response and now we want to have `high` as the response.
 We also have to create a logistic regression specification that we will use as our classification model.
+
+
 
 
 ::: {.cell}
@@ -351,7 +423,11 @@ lr_poly_wf <- workflow() %>%
 :::
 
 
+
+
 This polynomial logistic regression model workflow can now be fit and predicted with as usual.
+
+
 
 
 ::: {.cell}
@@ -363,6 +439,7 @@ predict(lr_poly_fit, new_data = Wage)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 3,000 × 1
    .pred_class
@@ -379,11 +456,17 @@ predict(lr_poly_fit, new_data = Wage)
 10 Low        
 # ℹ 2,990 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 If we want we can also get back the underlying probability predictions for the two classes, and their confidence intervals for these probability predictions by setting `type = "prob"` and `type = "conf_int"`.
+
+
 
 
 ::: {.cell}
@@ -393,6 +476,7 @@ predict(lr_poly_fit, new_data = Wage, type = "prob")
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 3,000 × 2
       .pred_High .pred_Low
@@ -409,6 +493,8 @@ predict(lr_poly_fit, new_data = Wage, type = "prob")
 10 0.0323            0.968
 # ℹ 2,990 more rows
 ```
+
+
 :::
 
 ```{.r .cell-code}
@@ -416,6 +502,7 @@ predict(lr_poly_fit, new_data = Wage, type = "conf_int")
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 3,000 × 4
    .pred_lower_High .pred_upper_High .pred_lower_Low .pred_upper_Low
@@ -432,11 +519,17 @@ predict(lr_poly_fit, new_data = Wage, type = "conf_int")
 10         2.26e- 2          0.0458            0.954           0.977
 # ℹ 2,990 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 We can use these to visualize the probability curve for the classification model.
+
+
 
 
 ::: {.cell}
@@ -469,7 +562,11 @@ larger than 60, where it quickly widens.' width=672}
 :::
 
 
+
+
 Next, let us take a look at the step function and how to fit a model using it as a preprocessor. You can create step functions in a couple of different ways. `step_discretize()` will convert a numeric variable into a factor variable with `n` bins, `n` here is specified with `num_breaks`. These will have approximately the same number of points in them according to the training data set.
+
+
 
 
 ::: {.cell}
@@ -487,6 +584,7 @@ discretize_fit
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 ══ Workflow [trained] ══════════════════════════════════════════════════════════
 Preprocessor: Recipe
@@ -509,11 +607,17 @@ Degrees of Freedom: 2999 Total (i.e. Null);  2996 Residual
 Null Deviance:	    730.5 
 Residual Deviance: 710.4 	AIC: 718.4
 ```
+
+
 :::
 :::
+
+
 
 
 If you already know where you want the step function to break then you can use `step_cut()` and supply the breaks manually.
+
+
 
 
 ::: {.cell}
@@ -531,6 +635,7 @@ cut_fit
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 ══ Workflow [trained] ══════════════════════════════════════════════════════════
 Preprocessor: Recipe
@@ -553,13 +658,19 @@ Degrees of Freedom: 2999 Total (i.e. Null);  2996 Residual
 Null Deviance:	    730.5 
 Residual Deviance: 704.3 	AIC: 712.3
 ```
+
+
 :::
 :::
+
+
 
 
 ## Splines
 
 In order to fit regression splines, or in other words, use splines as preprocessors when fitting a linear model, we use `step_bs()` to construct the matrices of basis functions. The `bs()` function is used and arguments such as `knots` can be passed to `bs()` by using passing a named list to `options`.
+
+
 
 
 ::: {.cell}
@@ -571,7 +682,11 @@ rec_spline <- recipe(wage ~ age, data = Wage) %>%
 :::
 
 
+
+
 We already have the linear regression specification `lm_spec` so we can create the workflow, fit the model and predict with it like we have seen how to do in the previous chapters.
+
+
 
 
 ::: {.cell}
@@ -587,12 +702,13 @@ predict(spline_fit, new_data = Wage)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 3,000 × 1
    .pred
    <dbl>
- 1  58.7
- 2  84.3
+ 1  57.3
+ 2  84.5
  3 120. 
  4 120. 
  5 120. 
@@ -603,11 +719,17 @@ predict(spline_fit, new_data = Wage)
 10 120. 
 # ℹ 2,990 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 Lastly, we can plot the basic spline on top of the data.
+
+
 
 
 ::: {.cell}
@@ -636,6 +758,8 @@ the middle of the data with two dottled curves follows closely
 around.' width=672}
 :::
 :::
+
+
 
 
 ## GAMs

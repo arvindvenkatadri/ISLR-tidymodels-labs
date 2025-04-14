@@ -1,13 +1,19 @@
 # Resampling Methods
 
 
+
+
 ::: {.cell}
 
 :::
 
 
+
+
 This lab will show us how to perform different resampling techniques. Some of these tasks are quite general and useful in many different areas. The bootstrap being such an example. This chapter introduces a lot of new packages.
 This chapter will bring [rsample](https://www.tidymodels.org/start/resampling/) into view for creating resampled data frames as well as [yardstick](https://yardstick.tidymodels.org/) to calculate performance metrics. Finally, we will use [tune](https://tune.tidymodels.org/) to fit our models within resamples and [dials](https://dials.tidymodels.org/) to help with the selection of hyperparameter tuning values.
+
+
 
 
 ::: {.cell}
@@ -22,12 +28,16 @@ Portfolio <- tibble(Portfolio)
 :::
 
 
+
+
 ## The Validation Set Approach
 
 When fitting a model it is often desired to be able to calculate a performance metric to quantify how well the model fits the data. If a model is evaluated on the data it was fit on you are quite likely to get over-optimistic results. It is therefore we split our data into testing and training. This way we can fit the model to data and evaluate it on some other that that is similar.
 
 Splitting of the data is done using random sampling, so it is advised to set a seed before splitting to assure we can reproduce the results.
 The `initial_split()` function takes a data.frame and returns a `rsplit` object. This object contains information about which observations belong to which data set, testing, and training. This is where you would normally set a proportion of data that is used for training and how much is used for evaluation. This is set using the `prop` argument which I set to `0.5` to closely match what happened in ISLR. I'm also setting the `strata` argument. This argument makes sure that both sides of the split have roughly the same distribution for each value of `strata`. If a numeric variable is passed to `strata` then it is binned and distributions are matched within bins.
+
+
 
 
 ::: {.cell}
@@ -39,15 +49,22 @@ Auto_split
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 <Training/Testing/Total>
 <194/198/392>
 ```
+
+
 :::
 :::
+
+
 
 
 The testing and training data sets can be materialized using the `testing()` and `training()` functions respectively.
+
+
 
 
 ::: {.cell}
@@ -59,7 +76,11 @@ Auto_test <- testing(Auto_split)
 :::
 
 
+
+
 And by looking at `Auto_train` and `Auto_test` we see that the lengths match what we expect.
+
+
 
 
 ::: {.cell}
@@ -69,6 +90,7 @@ Auto_train
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 194 × 9
      mpg cylinders displacement horsepower weight acceleration  year origin
@@ -86,6 +108,8 @@ Auto_train
 # ℹ 184 more rows
 # ℹ 1 more variable: name <fct>
 ```
+
+
 :::
 
 ```{.r .cell-code}
@@ -93,6 +117,7 @@ Auto_test
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 198 × 9
      mpg cylinders displacement horsepower weight acceleration  year origin
@@ -110,14 +135,20 @@ Auto_test
 # ℹ 188 more rows
 # ℹ 1 more variable: name <fct>
 ```
+
+
 :::
 :::
+
+
 
 
 Now that we have a train-test split let us fit some models and evaluate their performance. Before we move on it is important to reiterate that you should only use the testing data set once! Once you have looked at the performance on the testing data set you should not modify your models. If you do you might overfit the model due to data leakage.
 
 Our modeling goal is to predict `mpg` by `horsepower` using a simple linear regression model, and a polynomial regression model. 
 First, we set up a linear regression specification.
+
+
 
 
 ::: {.cell}
@@ -130,7 +161,11 @@ lm_spec <- linear_reg() %>%
 :::
 
 
+
+
 And we fit it like normal. Note that we are fitting it using `Auto_train`.
+
+
 
 
 ::: {.cell}
@@ -142,7 +177,11 @@ lm_fit <- lm_spec %>%
 :::
 
 
+
+
 We can now use the `augment()` function to extract the prediction and `rmse()` to calculate the root mean squared error. This will be the testing RMSE since we are evaluating on `Auto_test`.
+
+
 
 
 ::: {.cell}
@@ -153,19 +192,26 @@ augment(lm_fit, new_data = Auto_test) %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 1 × 3
   .metric .estimator .estimate
   <chr>   <chr>          <dbl>
 1 rmse    standard        5.06
 ```
+
+
 :::
 :::
+
+
 
 
 and we get a RMSE of 5.0583165. This particular value is going to vary depending on what seed number you picked since the random sampling used in splitting the data set will be slightly different.
 
 Using this framework makes it easy for us to calculate the training RMSE
+
+
 
 
 ::: {.cell}
@@ -176,19 +222,26 @@ augment(lm_fit, new_data = Auto_train) %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 1 × 3
   .metric .estimator .estimate
   <chr>   <chr>          <dbl>
 1 rmse    standard        4.74
 ```
+
+
 :::
 :::
+
+
 
 
 Comparing these two values can give us a look into how generalizable the model is to data it hasn't seen before. We do expect that the training RMSE to be lower than the testing RMSE but if you see a large difference there is an indication of overfitting or a shift between the training data set and testing data set. We don't expect a shift here since the data sets were created with random sampling.
 
 Next we will fit a polynomial regression model. We can use the linear model specification `lm_spec` to add a preprocessing unit with `recipe()` and `step_poly()` to create the polynomial expansion of `horsepower`. we can combine these two with `workflow()` to create a workflow object.
+
+
 
 
 ::: {.cell}
@@ -205,6 +258,7 @@ poly_wf
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 ══ Workflow ════════════════════════════════════════════════════════════════════
 Preprocessor: Recipe
@@ -220,11 +274,17 @@ Linear Regression Model Specification (regression)
 
 Computational engine: lm 
 ```
+
+
 :::
 :::
+
+
 
 
 We can now fit this model. Again remember to fit it on the training data set `Auto_train`.
+
+
 
 
 ::: {.cell}
@@ -235,7 +295,11 @@ poly_fit <- fit(poly_wf, data = Auto_train)
 :::
 
 
+
+
 The testing RMSE is then calculated as
+
+
 
 
 ::: {.cell}
@@ -246,19 +310,26 @@ augment(poly_fit, new_data = Auto_test) %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 1 × 3
   .metric .estimator .estimate
   <chr>   <chr>          <dbl>
 1 rmse    standard        4.37
 ```
+
+
 :::
 :::
+
+
 
 
 Which is a little bit lower. So it would appear just from this, that the polynomial regression model has a better fit. Note that we are making decisions using the testing performance metrics, not the training performance metrics.
 
 Lastly, we show below how changing the seed results in a slightly different estimate.
+
+
 
 
 ::: {.cell}
@@ -277,14 +348,19 @@ augment(poly_fit, new_data = Auto_test) %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 1 × 3
   .metric .estimator .estimate
   <chr>   <chr>          <dbl>
 1 rmse    standard        4.35
 ```
+
+
 :::
 :::
+
+
 
 
 ## Leave-One-Out Cross-Validation
@@ -302,6 +378,8 @@ Earlier we set `degree = 2` to create a second-degree polynomial regression mode
 we are doing the hyperparameter tuning on just one parameter, namely the `degree` argument in `step_poly()`. Creating a new recipe with `degree = tune()` indicated that we intend for `degree` to be tuned.
 
 
+
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -315,7 +393,11 @@ poly_tuned_wf <- workflow() %>%
 :::
 
 
+
+
 This means that would not be able to fit this workflow right now as the value of `degree` is unspecified, and if we try we get an error:
+
+
 
 
 ::: {.cell}
@@ -325,15 +407,24 @@ fit(poly_tuned_wf, data = Auto_train)
 ```
 
 ::: {.cell-output .cell-output-error}
+
 ```
 Error in `recipes::prep()`:
-! You cannot `prep()` a tuneable recipe. Argument(s) with `tune()`: 'degree'. Do you want to use a tuning function such as `tune_grid()`?
+✖ You cannot `prep()` a tunable recipe.
+ℹ The following step has `tune()`:
+• step_poly: `degree`
 ```
+
+
 :::
 :::
+
+
 
 
 The next thing we need to create is the k-Fold data set. This can be done using the `vfold_cv()` function. Note that the function uses `v` instead of *k* which is the terminology of ISLR. we set `v = 10` as a common choice for *k*.
+
+
 
 
 ::: {.cell}
@@ -344,6 +435,7 @@ Auto_folds
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 #  10-fold cross-validation 
 # A tibble: 10 × 2
@@ -360,13 +452,19 @@ Auto_folds
  9 <split [265/29]> Fold09
 10 <split [265/29]> Fold10
 ```
+
+
 :::
 :::
+
+
 
 
 The result is a tibble of `vfold_split`s which is quite similar to the `rsplit` object we saw earlier.
 
 The last thing we need is a tibble of possible values we want to explore. Each of the tunable parameters in tidymodels has an associated function in the [dials package](https://dials.tidymodels.org/reference/index.html). We need to use the `degree()` function here, and we extend the range to have a max of 10. This dials function is then passed to `grid_regular()` to create a regular grid of values.
+
+
 
 
 ::: {.cell}
@@ -377,7 +475,11 @@ degree_grid <- grid_regular(degree(range = c(1, 10)), levels = 10)
 :::
 
 
+
+
 Using `grid_regular()` is a little overkill for this application since the following code would provide the same result. But once you have multiple parameters you want to tune it makes sure that everything is in check and properly named.
+
+
 
 
 ::: {.cell}
@@ -388,7 +490,11 @@ degree_grid <- tibble(degree = seq(1, 10))
 :::
 
 
+
+
 Now that all the necessary objects have been created we can pass them to `tune_grid()` which will fit the models within each fold for each value specified in `degree_grid`.
+
+
 
 
 ::: {.cell}
@@ -403,9 +509,13 @@ tune_res <- tune_grid(
 :::
 
 
+
+
 It can be helpful to add `control = control_grid(verbose = TRUE)`, this will print out the progress. Especially helpful when the models take a while to fit. `tune_res` by itself isn't easily readable. Luckily `tune` provides a handful of helper functions.
 
 `autoplot()` gives a visual overview of the performance of different hyperparameter pairs.
+
+
 
 
 ::: {.cell}
@@ -423,9 +533,13 @@ degrees. Best performance is seen when degree == 1.' width=672}
 :::
 
 
+
+
 It appears that the biggest jump in performance comes from going to `degree = 2`. Afterward, there might be a little bit of improvement but it isn't as obvious.
 
 The number used for plotting can be extracted directly with `collect_metrics()`. We also get an estimate of the standard error of the performance metric. We get this since we have 10 different estimates, one for each fold.
+
+
 
 
 ::: {.cell}
@@ -435,6 +549,7 @@ collect_metrics(tune_res)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 20 × 7
    degree .metric .estimator  mean     n std_err .config              
@@ -460,11 +575,17 @@ collect_metrics(tune_res)
 19     10 rmse    standard   4.50     10  0.227  Preprocessor10_Model1
 20     10 rsq     standard   0.658    10  0.0465 Preprocessor10_Model1
 ```
+
+
 :::
 :::
+
+
 
 
 You can also use `show_best()` to only show the best performing models.
+
+
 
 
 ::: {.cell}
@@ -474,6 +595,7 @@ show_best(tune_res, metric = "rmse")
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 5 × 7
   degree .metric .estimator  mean     n std_err .config              
@@ -484,8 +606,12 @@ show_best(tune_res, metric = "rmse")
 4      6 rmse    standard    4.41    10   0.189 Preprocessor06_Model1
 5      8 rmse    standard    4.41    10   0.175 Preprocessor08_Model1
 ```
+
+
 :::
 :::
+
+
 
 
 We did see that the performance plateaued after `degree = 2`. There are a couple of function to select models by more sophisticated rules. `select_by_one_std_err()` and `select_by_pct_loss()`.  Here we use `select_by_one_std_err()` which selects the most simple model that is within one standard error of the numerically optimal results. We need to specify `degree` to tell `select_by_one_std_err()` which direction is more simple.
@@ -498,6 +624,8 @@ You want to
 lower polynomials models are simpler so we ditch `desc()`.
 
 
+
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -505,17 +633,24 @@ select_by_one_std_err(tune_res, degree, metric = "rmse")
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
-# A tibble: 1 × 9
-  degree .metric .estimator  mean     n std_err .config             .best .bound
-   <int> <chr>   <chr>      <dbl> <int>   <dbl> <chr>               <dbl>  <dbl>
-1      2 rmse    standard    4.37    10   0.209 Preprocessor02_Mod…  4.37   4.58
+# A tibble: 1 × 2
+  degree .config              
+   <int> <chr>                
+1      2 Preprocessor02_Model1
 ```
+
+
 :::
 :::
+
+
 
 
 This selected `degree = 2`. And we will use this value since we simpler models sometimes can be very beneficial. Especially if we want to explain what happens in it.
+
+
 
 
 ::: {.cell}
@@ -526,7 +661,11 @@ best_degree <- select_by_one_std_err(tune_res, degree, metric = "rmse")
 :::
 
 
+
+
 This selected value can be now be used to specify the previous unspecified `degree` argument in `poly_wf` using `finalize_workflow()`.
+
+
 
 
 ::: {.cell}
@@ -538,6 +677,7 @@ final_wf
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 ══ Workflow ════════════════════════════════════════════════════════════════════
 Preprocessor: Recipe
@@ -553,11 +693,17 @@ Linear Regression Model Specification (regression)
 
 Computational engine: lm 
 ```
+
+
 :::
 :::
+
+
 
 
 This workflow can now be fitted. And we want to make sure we fit it on the full training data set.
+
+
 
 
 ::: {.cell}
@@ -569,6 +715,7 @@ final_fit
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 ══ Workflow [trained] ══════════════════════════════════════════════════════════
 Preprocessor: Recipe
@@ -588,8 +735,12 @@ Coefficients:
       (Intercept)  horsepower_poly_1  horsepower_poly_2  
             23.34            -104.85              34.39  
 ```
+
+
 :::
 :::
+
+
 
 
 ## The Bootstrap
@@ -600,6 +751,8 @@ This section illustrates the use of the bootstrap in the simple Section 5.2  of 
 First, we want to look at the accuracy of a statistic of interest. This statistic is justified in ISLR. We want to calculate the metric within many different bootstraps. We start by calculating 1000 bootstraps of the `Portfolio` data set.
 
 
+
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -608,6 +761,7 @@ Portfolio_boots
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # Bootstrap sampling 
 # A tibble: 1,000 × 2
@@ -625,13 +779,19 @@ Portfolio_boots
 10 <split [100/41]> Bootstrap0010
 # ℹ 990 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 The result is a tibble of `boot_split` objects. The rsample has constructed these splits in such a way that these 1000 bootstraps take up way less than 1000 times the space as `Portfolio`.
 
 Next, we create a function that takes a `boot_split` object and returns the calculated metric.
+
+
 
 
 ::: {.cell}
@@ -648,7 +808,11 @@ alpha.fn <- function(split) {
 :::
 
 
+
+
 Now we can use `mutate()` and `map_dbl()` from [dplyr](https://dplyr.tidyverse.org/) and [purrr](https://purrr.tidyverse.org/) respectively to apply `alpha.fn` to each of the bootstraps.
+
+
 
 
 ::: {.cell}
@@ -661,6 +825,7 @@ alpha_res
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # Bootstrap sampling 
 # A tibble: 1,000 × 3
@@ -678,13 +843,19 @@ alpha_res
 10 <split [100/41]> Bootstrap0010 0.407
 # ℹ 990 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 and now we have all the bootstrap sample values. These can now further be analyzed.
 
 In the next example do we want to study the variability of the slope and intercept estimate of the linear regression model. And it follows the same structure. First, we create some bootstraps of the data. Then we create a function that takes a split and returns some values. This function will return a tibble for each bootstrap.
+
+
 
 
 ::: {.cell}
@@ -700,7 +871,11 @@ boot.fn <- function(split) {
 :::
 
 
+
+
 then we use `mutate()` and `map()` to apply the function to each of the bootstraps.
+
+
 
 
 ::: {.cell}
@@ -712,7 +887,11 @@ boot_res <- Auto_boots %>%
 :::
 
 
+
+
 And we can now `unnest()` and use `group_by()` and `summarise()` to get an estimate of the variability of the slope and intercept in this linear regression model.
+
+
 
 
 ::: {.cell}
@@ -726,6 +905,7 @@ boot_res %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 2 × 3
   term          mean      sd
@@ -733,5 +913,7 @@ boot_res %>%
 1 (Intercept) 39.8   0.759  
 2 horsepower  -0.156 0.00593
 ```
+
+
 :::
 :::

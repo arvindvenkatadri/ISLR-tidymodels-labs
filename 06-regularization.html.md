@@ -1,15 +1,21 @@
 # Linear Model Selection and Regularization
 
 
+
+
 ::: {.cell}
 
 :::
+
+
 
 
 This lab will take a look at regularization models and hyperparameter tuning. These models are related to the models we saw in chapter 3 and 4, with the difference that they contain a regularization term.
 This chapter will use [parsnip](https://www.tidymodels.org/start/models/) for model fitting and [recipes and workflows](https://www.tidymodels.org/start/recipes/) to perform the transformations, and [tune and dials](https://www.tidymodels.org/start/tuning/) to tune the hyperparameters of the model.
 
 We will be using the `Hitters` data set from the `ISLR` package. We wish to predict the baseball players `Salary` based on several different characteristics which are included in the data set. Since we wish to predict `Salary`, then we need to remove any missing data from that column. Otherwise, we won't be able to run the models.
+
+
 
 
 ::: {.cell}
@@ -22,6 +28,8 @@ Hitters <- as_tibble(Hitters) %>%
   filter(!is.na(Salary))
 ```
 :::
+
+
 
 
 ## Best Subset Selection
@@ -37,6 +45,8 @@ tidymodels does not currently support forward and backward stepwise selection me
 We will use the `glmnet` package to perform ridge regression. `parsnip` does not have a dedicated function to create a ridge regression model specification. You need to use `linear_reg()` and set `mixture = 0` to specify a ridge model. The `mixture` argument specifies the amount of different types of regularization, `mixture = 0` specifies only ridge regularization and `mixture = 1` specifies only lasso regularization. Setting `mixture` to a value between 0 and 1 lets us use both. When using the `glmnet` engine we also need to set a `penalty` to be able to fit the model. We will set this value to `0` for now, it is not the best value, but we will look at how to select the best value in a little bit.
 
 
+
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -47,7 +57,11 @@ ridge_spec <- linear_reg(mixture = 0, penalty = 0) %>%
 :::
 
 
+
+
 Once the specification is created we can fit it to our data. We will use all the predictors.
+
+
 
 
 ::: {.cell}
@@ -58,7 +72,11 @@ ridge_fit <- fit(ridge_spec, Salary ~ ., data = Hitters)
 :::
 
 
+
+
 The `glmnet` package will fit the model for all values of `penalty` at once, so let us see what the parameter estimate for the model is now that we have `penalty = 0`.
+
+
 
 
 ::: {.cell}
@@ -68,6 +86,7 @@ tidy(ridge_fit)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 20 × 3
    term          estimate penalty
@@ -93,11 +112,17 @@ tidy(ridge_fit)
 19 Errors        -3.69          0
 20 NewLeagueN   -18.1           0
 ```
+
+
 :::
 :::
+
+
 
 
 Let us instead see what the estimates would be if the penalty was 11498.
+
+
 
 
 ::: {.cell}
@@ -107,6 +132,7 @@ tidy(ridge_fit, penalty = 11498)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 20 × 3
    term         estimate penalty
@@ -132,11 +158,17 @@ tidy(ridge_fit, penalty = 11498)
 19 Errors       -0.0206    11498
 20 NewLeagueN    0.303     11498
 ```
+
+
 :::
 :::
+
+
 
 
 Notice how the estimates are decreasing when the amount of penalty goes up. Look below at the parameter estimates for `penalty = 705` and `penalty = 50`.
+
+
 
 
 ::: {.cell}
@@ -146,6 +178,7 @@ tidy(ridge_fit, penalty = 705)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 20 × 3
    term        estimate penalty
@@ -171,6 +204,8 @@ tidy(ridge_fit, penalty = 705)
 19 Errors       -0.704      705
 20 NewLeagueN    8.61       705
 ```
+
+
 :::
 
 ```{.r .cell-code}
@@ -178,6 +213,7 @@ tidy(ridge_fit, penalty = 50)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 20 × 3
    term          estimate penalty
@@ -203,11 +239,17 @@ tidy(ridge_fit, penalty = 50)
 19 Errors        -3.28         50
 20 NewLeagueN    -9.42         50
 ```
+
+
 :::
 :::
+
+
 
 
 We can visualize how the magnitude of the coefficients are being regularized towards zero as the penalty goes up. 
+
+
 
 
 ::: {.cell}
@@ -220,13 +262,17 @@ ridge_fit %>%
 ::: {.cell-output-display}
 ![](06-regularization_files/figure-html/unnamed-chunk-8-1.png){fig-alt='Multiple line chart. Log Lambda along the x-axis, Coefficients
 along the y-axis. The curves starts at different places along
-the y-axis but slowly converge towards 0 as the Log Lambda
+the y-axis but slowly converge towards 0 as the Log Lambda 
 value increase.' width=672}
 :::
 :::
 
 
+
+
 Prediction is done like normal, if we use `predict()` by itself, then `penalty = 0` as we set in the model specification is used.
+
+
 
 
 ::: {.cell}
@@ -236,6 +282,7 @@ predict(ridge_fit, new_data = Hitters)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 263 × 1
     .pred
@@ -252,11 +299,17 @@ predict(ridge_fit, new_data = Hitters)
 10  865. 
 # ℹ 253 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 but we can also get predictions for other values of `penalty` by specifying it in `predict()`
+
+
 
 
 ::: {.cell}
@@ -266,6 +319,7 @@ predict(ridge_fit, new_data = Hitters, penalty = 500)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 263 × 1
    .pred
@@ -282,13 +336,19 @@ predict(ridge_fit, new_data = Hitters, penalty = 500)
 10  840.
 # ℹ 253 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 We saw how we can fit a ridge model and make predictions for different values of `penalty`. But it would be nice if we could find the "best" value of the penalty. This is something we can use hyperparameter tuning for. Hyperparameter tuning is in its simplest form a way of fitting many models with different sets of hyperparameters trying to find one that performs "best". The complexity in hyperparameter tuning can come from how you try different models. We will keep it simple for this lab and only look at grid search, only looking at evenly spaced parameter values. This is a fine enough approach if you have one or two tunable parameters but can become computationally infeasible. See the chapter on [iterative search](https://www.tmwr.org/iterative-search.html) from [Tidy Modeling with R](https://www.tmwr.org/) for more information.
 
 We start like normal by setting up a validation split. A K-fold cross-validation data set is created on the training data set with 10 folds.
+
+
 
 
 ::: {.cell}
@@ -304,6 +364,8 @@ Hitters_fold <- vfold_cv(Hitters_train, v = 10)
 :::
 
 
+
+
 We can use the `tune_grid()` function to perform hyperparameter tuning using a grid search. `tune_grid()` needs 3 different thing;
 
 - a `workflow` object containing the model and preprocessor,
@@ -315,6 +377,8 @@ Optionally a metric set of performance metrics can be supplied for evaluation. I
 We already have a resample object created in `Hitters_fold`. Now we should create the workflow specification next.
 
 We just used the data set as is when we fit the model earlier. But ridge regression is scale sensitive so we need to make sure that the variables are on the same scale. We can use `step_normalize()`. Secondly let us deal with the factor variables ourself using `step_novel()` and `step_dummy()`.
+
+
 
 
 ::: {.cell}
@@ -330,7 +394,11 @@ ridge_recipe <-
 :::
 
 
+
+
 The model specification will look very similar to what we have seen earlier, but we will set `penalty = tune()`. This tells `tune_grid()` that the `penalty` parameter should be tuned.
+
+
 
 
 ::: {.cell}
@@ -344,7 +412,11 @@ ridge_spec <-
 :::
 
 
+
+
 Now we combine to create a `workflow` object.
+
+
 
 
 ::: {.cell}
@@ -357,7 +429,11 @@ ridge_workflow <- workflow() %>%
 :::
 
 
+
+
 The last thing we need is the values of `penalty` we are trying. This can be created using `grid_regular()` which creates a grid of evenly spaces parameter values. We use the `penalty()` function from the [dials](https://dials.tidymodels.org/) package to denote the parameter and set the range of the grid we are searching for. Note that this range is log-scaled.
+
+
 
 
 ::: {.cell}
@@ -368,6 +444,7 @@ penalty_grid
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 50 × 1
      penalty
@@ -384,13 +461,19 @@ penalty_grid
 10 0.000687 
 # ℹ 40 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 Using 50 levels for one parameter might seem overkill and in many applications it is. But remember that `glmnet` fits all the models in one go so adding more levels to `penalty` doesn't affect the computational speed much.
 
 Now we have everything we need and we can fit all the models.
+
+
 
 
 ::: {.cell}
@@ -406,6 +489,7 @@ tune_res
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # Tuning results
 # 10-fold cross-validation 
@@ -423,11 +507,17 @@ tune_res
  9 <split [177/19]> Fold09 <tibble [100 × 5]> <tibble [0 × 3]>
 10 <split [177/19]> Fold10 <tibble [100 × 5]> <tibble [0 × 3]>
 ```
+
+
 :::
 :::
+
+
 
 
 The output of `tune_grid()` can be hard to read by itself unprocessed. `autoplot()` creates a great visualization 
+
+
 
 
 ::: {.cell}
@@ -446,7 +536,11 @@ gets larger.' width=672}
 :::
 :::
 
+
+
 Here we see that the amount of regularization affects the performance metrics differently. Note how there are areas where the amount of regularization doesn't have any meaningful influence on the coefficient estimates. We can also see the raw metrics that created this chart by calling `collect_matrics()`. 
+
+
 
 
 ::: {.cell}
@@ -456,6 +550,7 @@ collect_metrics(tune_res)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 100 × 7
      penalty .metric .estimator    mean     n std_err .config              
@@ -472,11 +567,17 @@ collect_metrics(tune_res)
 10 0.0000655 rsq     standard     0.470    10  0.0615 Preprocessor1_Model05
 # ℹ 90 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 The "best" values of this can be selected using `select_best()`, this function requires you to specify a `matric` that it should select against. 
+
+
 
 
 ::: {.cell}
@@ -487,17 +588,24 @@ best_penalty
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 1 × 2
   penalty .config              
     <dbl> <chr>                
 1    33.9 Preprocessor1_Model33
 ```
+
+
 :::
 :::
+
+
 
 
 This value of `penalty` can then be used with `finalize_workflow()` to update/finalize the recipe by replacing `tune()` with the value of `best_penalty`. Now, this model should be fit again, this time using the whole training data set.
+
+
 
 
 ::: {.cell}
@@ -510,7 +618,11 @@ ridge_final_fit <- fit(ridge_final, data = Hitters_train)
 :::
 
 
+
+
 This final model can now be applied on our testing data set to validate the performance
+
+
 
 
 ::: {.cell}
@@ -521,14 +633,19 @@ augment(ridge_final_fit, new_data = Hitters_test) %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 1 × 3
   .metric .estimator .estimate
   <chr>   <chr>          <dbl>
 1 rsq     standard       0.461
 ```
+
+
 :::
 :::
+
+
 
 
 And it performs fairly well given what we saw earlier.
@@ -538,6 +655,8 @@ And it performs fairly well given what we saw earlier.
 We will use the `glmnet` package to perform lasso regression. `parsnip` does not have a dedicated function to create a ridge regression model specification. You need to use `linear_reg()` and set `mixture = 1` to specify a lasso model. The `mixture` argument specifies the amount of different types of regularization, `mixture = 0` specifies only ridge regularization and `mixture = 1` specifies only lasso regularization. Setting `mixture` to a value between 0 and 1 lets us use both.
 
 The following procedure will be very similar to what we saw in the ridge regression section. The preprocessing needed is the same, but let us write it out one more time. 
+
+
 
 
 ::: {.cell}
@@ -553,7 +672,11 @@ lasso_recipe <-
 :::
 
 
+
+
 Next, we finish the lasso regression `workflow`.
+
+
 
 
 ::: {.cell}
@@ -571,7 +694,11 @@ lasso_workflow <- workflow() %>%
 :::
 
 
+
+
 While we are doing a different kind of regularization we still use the same `penalty` argument. I have picked a different range for the values of penalty since I know it will be a good range. You would in practice have to cast a wide net at first and then narrow on the range of interest.
+
+
 
 
 ::: {.cell}
@@ -582,7 +709,11 @@ penalty_grid <- grid_regular(penalty(range = c(-2, 2)), levels = 50)
 :::
 
 
+
+
 And we can use `tune_grid()` again.
+
+
 
 
 ::: {.cell}
@@ -608,7 +739,11 @@ gets larger.' width=672}
 :::
 
 
+
+
 We select the best value of `penalty` using `select_best()`
+
+
 
 
 ::: {.cell}
@@ -619,7 +754,11 @@ best_penalty <- select_best(tune_res, metric = "rsq")
 :::
 
 
+
+
 And refit the using the whole training data set.
+
+
 
 
 ::: {.cell}
@@ -632,7 +771,11 @@ lasso_final_fit <- fit(lasso_final, data = Hitters_train)
 :::
 
 
+
+
 And we are done, by calculating the `rsq` value for the lasso model can we see that for this data ridge regression outperform lasso regression.
+
+
 
 
 ::: {.cell}
@@ -643,14 +786,19 @@ augment(lasso_final_fit, new_data = Hitters_test) %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 1 × 3
   .metric .estimator .estimate
   <chr>   <chr>          <dbl>
 1 rsq     standard       0.446
 ```
+
+
 :::
 :::
+
+
 
 
 ## Principal Components Regression
@@ -658,6 +806,8 @@ augment(lasso_final_fit, new_data = Hitters_test) %>%
 We will talk more about principal components analysis in chapter 10. This section will show how principal components can be used as a dimensionality reduction preprocessing step.
 
 I will treat principal component regression as a linear model with PCA transformations in the preprocessing. But using the tidymodels framework then this is still mostly one model. 
+
+
 
 
 ::: {.cell}
@@ -671,7 +821,11 @@ lm_spec <-
 :::
 
 
+
+
 The preprocessing recipe will closely resemble the recipe we saw in the ridge and lasso sections. The main difference is that we end the recipe with `step_pca()` which will perform principal component analysis on all the predictors, and return the components that explain `threshold` percent of the variance. We have set `threshold = tune()` so we can treat the threshold as a hyperparameter to be tuned. By using workflows and tune together can be tune parameters in the preprocessing as well as parameters in the models.
+
+
 
 
 ::: {.cell}
@@ -693,7 +847,11 @@ pca_workflow <-
 :::
 
 
+
+
 We create a smaller grid for `threshold` and we don't need to modify the range since `[0, 1]` is an acceptable range.
+
+
 
 
 ::: {.cell}
@@ -704,6 +862,7 @@ threshold_grid
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 10 × 1
    threshold
@@ -719,11 +878,17 @@ threshold_grid
  9     0.889
 10     1    
 ```
+
+
 :::
 :::
+
+
 
 
 And now we fit using `tune_grid()`. This time we will actually perform 100 fits since we need to fit a model for each value of `threshold` within each fold.
+
+
 
 
 ::: {.cell}
@@ -738,7 +903,11 @@ tune_res <- tune_grid(
 :::
 
 
+
+
 The results look a little shaky here.
+
+
 
 
 ::: {.cell}
@@ -756,7 +925,11 @@ for threshold == 0.5.' width=672}
 :::
 
 
+
+
 But we can still select the best model.
+
+
 
 
 ::: {.cell}
@@ -767,7 +940,11 @@ best_threshold <- select_best(tune_res, metric = "rmse")
 :::
 
 
+
+
 And fit the model much like have done a couple of times by now. The workflow is finalized using the value we selected with `select_best()`, and training using the full training data set.
+
+
 
 
 ::: {.cell}
@@ -780,9 +957,13 @@ pca_final_fit <- fit(pca_final, data = Hitters_train)
 :::
 
 
+
+
 ## Partial Least Squares
 
 Lastly, we have a partial least squares model. We will treat this much like the PCA section and say that partial least squares calculations will be done as a preprocessing that we tune. The following code is almost identical to previous chapters and will be shown in full without many explanations to avoid repetition. If you skipped to this section, go back and read the previous sections for more commentary.
+
+
 
 
 ::: {.cell}

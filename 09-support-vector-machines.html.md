@@ -1,13 +1,19 @@
 # Support Vector Machines
 
 
+
+
 ::: {.cell}
 
 :::
 
 
+
+
 This lab will take a look at support vector machines, in doing so we will explore how changing the hyperparameters can help improve performance. 
 This chapter will use [parsnip](https://www.tidymodels.org/start/models/) for model fitting and [recipes and workflows](https://www.tidymodels.org/start/recipes/) to perform the transformations, and [tune and dials](https://www.tidymodels.org/start/tuning/) to tune the hyperparameters of the model.
+
+
 
 
 ::: {.cell}
@@ -19,9 +25,13 @@ library(ISLR)
 :::
 
 
+
+
 ## Support Vector Classifier
 
 Let us start by creating a synthetic data set. We will use some normally distributed data with an added offset to create 2 separate classes.
+
+
 
 
 ::: {.cell}
@@ -39,7 +49,11 @@ sim_data <- tibble(
 :::
 
 
+
+
 Plotting it shows that we are having two slightly overlapping classes
+
+
 
 
 ::: {.cell}
@@ -55,11 +69,15 @@ ggplot(sim_data, aes(x1, x2, color = y)) +
 :::
 
 
+
+
 We can then create a linear SVM specification by setting `degree = 1` in a polynomial SVM model. We furthermore set `scaled = FALSE` in `set_engine()` to have the engine scale the data for us. Once we get to it later we can be performing this scaling in a recipe instead. 
 
 :::{.callout-note}
 `set_engine()` can be used to pass in additional arguments directly to the underlying engine. In this case, I'm passing in `scaled = FALSE` to `kernlab::ksvm()` which is the engine function.
 :::
+
+
 
 
 ::: {.cell}
@@ -72,7 +90,11 @@ svm_linear_spec <- svm_poly(degree = 1) %>%
 :::
 
 
+
+
 Taking the specification, we can add a specific `cost` of 10 before fitting the model to the data. Using `set_args()` allows us to set the `cost` argument without modifying the model specification.
+
+
 
 
 ::: {.cell}
@@ -86,6 +108,7 @@ svm_linear_fit
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 parsnip model object
 
@@ -103,11 +126,17 @@ Objective Function Value : -152.0188
 Training error : 0.125 
 Probability model included. 
 ```
+
+
 :::
 :::
+
+
 
 
 The `kernlab` models can be visualized using the `plot()` function if you load the `kernlab` package. 
+
+
 
 
 ::: {.cell}
@@ -130,7 +159,11 @@ which is represented by shapes.' width=672}
 :::
 
 
+
+
 what if we instead used a smaller value of the `cost` parameter?
+
+
 
 
 ::: {.cell}
@@ -144,6 +177,7 @@ svm_linear_fit
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 parsnip model object
 
@@ -161,13 +195,19 @@ Objective Function Value : -2.0376
 Training error : 0.15 
 Probability model included. 
 ```
+
+
 :::
 :::
+
+
 
 
 Now that a smaller value of the cost parameter is being used, we obtain a larger number of support vectors, because the margin is now wider.
 
 Let us set up a `tune_grid()` section to find the value of `cost` that leads to the highest accuracy for the SVM model.
+
+
 
 
 ::: {.cell}
@@ -195,13 +235,17 @@ autoplot(tune_res)
 ![](09-support-vector-machines_files/figure-html/unnamed-chunk-9-1.png){fig-alt='Facetted connected scatter chart. x-axis shows different
 values of cost, and the y-axis show the performance metric
 value. The facets correspond to the two performance metrics
-accuracy and roc_auc. Both charts show a constant value for
+accuracy and roc_auc. Both charts show a constant value for 
 all values of cost, expect for once where the accuracy skipes.' width=672}
 :::
 :::
 
 
+
+
 using the `tune_res` object and `select_best()` function allows us to find the value of `cost` that gives the best cross-validated accuracy. Finalize the workflow with `finalize_workflow()` and fit the new workflow on the data set.
+
+
 
 
 ::: {.cell}
@@ -216,7 +260,11 @@ svm_linear_fit <- svm_linear_final %>% fit(sim_data)
 :::
 
 
+
+
 We can now generate a different data set to act as the test data set. We will make sure that it is generated using the same model but with a different seed.
+
+
 
 
 ::: {.cell}
@@ -234,7 +282,11 @@ sim_data_test <- tibble(
 :::
 
 
+
+
 and asseessing the model on this testing data set shows us that the model still performs very well.
+
+
 
 
 ::: {.cell}
@@ -245,19 +297,26 @@ augment(svm_linear_fit, new_data = sim_data_test) %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
           Truth
 Prediction -1 1
         -1  8 3
         1   2 7
 ```
+
+
 :::
 :::
+
+
 
 
 ## Support Vector Machine
 
 We will now see how we can fit an SVM using a non-linear kernel. Let us start by generating some data, but this time generate with a non-linear class boundary.
+
+
 
 
 ::: {.cell}
@@ -283,7 +342,11 @@ another color.' width=672}
 :::
 
 
+
+
 We will try an SVM with a radial basis function. Such a kernel would allow us to capture the non-linearity in our data.
+
+
 
 
 ::: {.cell}
@@ -296,7 +359,11 @@ svm_rbf_spec <- svm_rbf() %>%
 :::
 
 
+
+
 fitting the model
+
+
 
 
 ::: {.cell}
@@ -308,7 +375,11 @@ svm_rbf_fit <- svm_rbf_spec %>%
 :::
 
 
+
+
 and plotting reveals that the model was able to separate the two classes, even though they were non-linearly separated.
+
+
 
 
 ::: {.cell}
@@ -329,7 +400,11 @@ the colors.' width=672}
 :::
 
 
+
+
 But let us see how well this model generalizes to new data from the same generating process. 
+
+
 
 
 ::: {.cell}
@@ -345,7 +420,11 @@ sim_data2_test <- tibble(
 :::
 
 
+
+
 And it works well!
+
+
 
 
 ::: {.cell}
@@ -356,19 +435,26 @@ augment(svm_rbf_fit, new_data = sim_data2_test) %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
           Truth
 Prediction   1   2
          1 137   7
          2  13  43
 ```
+
+
 :::
 :::
+
+
 
 
 ## ROC Curves
 
 ROC curves can easily be created using the `roc_curve()` function from the yardstick package. We use this function much the same way as we have done using the `accuracy()` function, but the main difference is that we pass the predicted class probability instead of passing the predicted class.
+
+
 
 
 ::: {.cell}
@@ -379,6 +465,7 @@ augment(svm_rbf_fit, new_data = sim_data2_test) %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 202 × 3
    .threshold specificity sensitivity
@@ -395,11 +482,17 @@ augment(svm_rbf_fit, new_data = sim_data2_test) %>%
 10      0.124      0.14         0.993
 # ℹ 192 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 This produces the different values of `specificity` and `sensitivity` for each threshold. We can get a quick visualization by passing the results of `roc_curve()` into `autoplot()`
+
+
 
 
 ::: {.cell}
@@ -419,7 +512,11 @@ the upper left side.' width=672}
 :::
 
 
+
+
 A common metric is t calculate the area under this curve. This can be done using the `roc_auc()` function (`_auc` stands for **a**rea **u**nder **c**urve).
+
+
 
 
 ::: {.cell}
@@ -430,19 +527,26 @@ augment(svm_rbf_fit, new_data = sim_data2_test) %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 1 × 3
   .metric .estimator .estimate
   <chr>   <chr>          <dbl>
 1 roc_auc binary         0.925
 ```
+
+
 :::
 :::
+
+
 
 
 ## Application to Gene Expression Data
 
 We now examine the Khan data set, which consists of several tissue samples corresponding to four distinct types of small round blue cell tumors. For each tissue sample, gene expression measurements are available. The data set comes in the `Khan` list which we will wrangle a little bit to create two tibbles, 1 for the training data and 1 for the testing data.
+
+
 
 
 ::: {.cell}
@@ -462,7 +566,11 @@ Khan_test <- bind_cols(
 
 
 
+
+
 looking at the dimensions of the training data reveals that we have 63 observations with 20308 gene expression measurements.
+
+
 
 
 ::: {.cell}
@@ -472,14 +580,21 @@ dim(Khan_train)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 [1]   63 2309
 ```
+
+
 :::
 :::
+
+
 
 
 There is a very large number of predictors compared to the number of rows. This indicates that a linear kernel will be preferable, as the added flexibility we would get from a polynomial or radial kernel is unnecessary.
+
+
 
 
 ::: {.cell}
@@ -492,7 +607,11 @@ khan_fit <- svm_linear_spec %>%
 :::
 
 
+
+
 Let us take a look at the training confusion matrix. And look, we get a perfect confusion matrix. We are getting this because the hyperplane was able to fully separate the classes.
+
+
 
 
 ::: {.cell}
@@ -503,6 +622,7 @@ augment(khan_fit, new_data = Khan_train) %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
           Truth
 Prediction  1  2  3  4
@@ -511,11 +631,17 @@ Prediction  1  2  3  4
          3  0  0 12  0
          4  0  0  0 20
 ```
+
+
 :::
 :::
+
+
 
 
 But remember we don't measure the performance by how well it performs on the training data set. We measure the performance of a model on how well it performs on the testing data set, so let us look at the testing confusion matrix
+
+
 
 
 ::: {.cell}
@@ -526,6 +652,7 @@ augment(khan_fit, new_data = Khan_test) %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
           Truth
 Prediction 1 2 3 4
@@ -534,8 +661,12 @@ Prediction 1 2 3 4
          3 0 0 4 0
          4 0 0 0 5
 ```
+
+
 :::
 :::
+
+
 
 
 And it performs fairly well. A couple of misclassifications but nothing too bad.

@@ -1,9 +1,13 @@
 # Linear Regression
 
 
+
+
 ::: {.cell}
 
 :::
+
+
 
 
 This lab will go over how to perform linear regression. This will include [simple linear regression](03-linear-regression.qmd#simple-linear-regression) and [multiple linear regression](03-linear-regression.qmd#multiple-linear-regression) in addition to how you can apply transformations to the predictors. This chapter will use [parsnip](https://www.tidymodels.org/start/models/) for model fitting and [recipes and workflows](https://www.tidymodels.org/start/recipes/) to perform the transformations.
@@ -11,6 +15,8 @@ This lab will go over how to perform linear regression. This will include [simpl
 ## Libraries
 
 We load tidymodels and ISLR and MASS for data sets.
+
+
 
 
 ::: {.cell}
@@ -21,6 +27,8 @@ library(tidymodels)
 library(ISLR)
 ```
 :::
+
+
 
 
 ## Simple linear regression
@@ -34,6 +42,8 @@ The `Boston` data set is quite outdated and contains some really unfortunate var
 We start by creating a parsnip specification for a linear regression model.
 
 
+
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -44,9 +54,13 @@ lm_spec <- linear_reg() %>%
 :::
 
 
+
+
 While it is unnecessary to set the mode for a linear regression since it can only be regression, we continue to do it in these labs to be explicit.
 
 The specification doesn't perform any calculations by itself. It is just a specification of what we want to do.
+
+
 
 
 ::: {.cell}
@@ -56,18 +70,25 @@ lm_spec
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 Linear Regression Model Specification (regression)
 
 Computational engine: lm 
 ```
+
+
 :::
 :::
+
+
 
 
 Once we have the specification we can `fit` it by supplying a formula expression and the data we want to fit the model on.
 The formula is written on the form `y ~ x` where `y` is the name of the response and `x` is the name of the predictors.
 The names used in the formula should match the names of the variables in the data set passed to `data`.
+
+
 
 
 ::: {.cell}
@@ -80,6 +101,7 @@ lm_fit
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 parsnip model object
 
@@ -91,11 +113,17 @@ Coefficients:
 (Intercept)        lstat  
       34.55        -0.95  
 ```
+
+
 :::
 :::
+
+
 
 
 The result of this fit is a parsnip model object. This object contains the underlying fit as well as some parsnip-specific information. If we want to look at the underlying fit object we can access it with `lm_fit$fit` or with
+
+
 
 
 ::: {.cell}
@@ -106,6 +134,7 @@ lm_fit %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 
 Call:
@@ -115,11 +144,17 @@ Coefficients:
 (Intercept)        lstat  
       34.55        -0.95  
 ```
+
+
 :::
 :::
+
+
 
 
 The `lm` object has a nice `summary()` method that shows more information about the fit, including parameter estimates and lack-of-fit statistics.
+
+
 
 
 ::: {.cell}
@@ -131,6 +166,7 @@ lm_fit %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 
 Call:
@@ -151,13 +187,19 @@ Residual standard error: 6.216 on 504 degrees of freedom
 Multiple R-squared:  0.5441,	Adjusted R-squared:  0.5432 
 F-statistic: 601.6 on 1 and 504 DF,  p-value: < 2.2e-16
 ```
+
+
 :::
 :::
+
+
 
 
 We can use packages from the [broom](https://broom.tidymodels.org/) package to extract key information out of the model objects in tidy formats.
 
 the `tidy()` function returns the parameter estimates of a `lm` object
+
+
 
 
 ::: {.cell}
@@ -167,6 +209,7 @@ tidy(lm_fit)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 2 × 5
   term        estimate std.error statistic   p.value
@@ -174,11 +217,17 @@ tidy(lm_fit)
 1 (Intercept)   34.6      0.563       61.4 3.74e-236
 2 lstat         -0.950    0.0387     -24.5 5.08e- 88
 ```
+
+
 :::
 :::
+
+
 
 
 and `glance()` can be used to extract the model statistics.
+
+
 
 
 ::: {.cell}
@@ -188,6 +237,7 @@ glance(lm_fit)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 1 × 12
   r.squared adj.r.squared sigma statistic  p.value    df logLik   AIC   BIC
@@ -195,11 +245,17 @@ glance(lm_fit)
 1     0.544         0.543  6.22      602. 5.08e-88     1 -1641. 3289. 3302.
 # ℹ 3 more variables: deviance <dbl>, df.residual <int>, nobs <int>
 ```
+
+
 :::
 :::
+
+
 
 
 Suppose that we like the model fit and we want to generate predictions, we would typically use the `predict()` function like so:
+
+
 
 
 ::: {.cell}
@@ -209,14 +265,21 @@ predict(lm_fit)
 ```
 
 ::: {.cell-output .cell-output-error}
+
 ```
 Error in predict.model_fit(lm_fit): argument "new_data" is missing, with no default
 ```
+
+
 :::
 :::
+
+
 
 
 But this produces an error when used on a parsnip model object. This is happening because we need to explicitly supply the data set that the predictions should be performed on via the `new_data` argument
+
+
 
 
 ::: {.cell}
@@ -226,6 +289,7 @@ predict(lm_fit, new_data = Boston)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 506 × 1
    .pred
@@ -242,13 +306,19 @@ predict(lm_fit, new_data = Boston)
 10 18.3 
 # ℹ 496 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 Notice how the predictions are returned as a tibble. This will always be the case for parsnip models, no matter what engine is used. This is very useful since consistency allows us to combine data sets easily.
 
 We can also return other types of predicts by specifying the `type` argument. Setting `type = "conf_int"` return a 95% confidence interval. 
+
+
 
 
 ::: {.cell}
@@ -258,6 +328,7 @@ predict(lm_fit, new_data = Boston, type = "conf_int")
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 506 × 2
    .pred_lower .pred_upper
@@ -274,8 +345,12 @@ predict(lm_fit, new_data = Boston, type = "conf_int")
 10       17.7        18.9 
 # ℹ 496 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 :::{.callout-note}
@@ -283,6 +358,8 @@ Not all engines can return all types of predictions.
 :::
 
 If you want to evaluate the performance of a model, you might want to compare the observed value and the predicted value for a data set. You 
+
+
 
 
 ::: {.cell}
@@ -296,6 +373,7 @@ bind_cols(
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 506 × 2
     medv .pred
@@ -312,11 +390,17 @@ bind_cols(
 10  18.9 18.3 
 # ℹ 496 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 You can get the same results using the `augment()` function to save you a little bit of typing.
+
+
 
 
 ::: {.cell}
@@ -327,6 +411,7 @@ augment(lm_fit, new_data = Boston) %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 506 × 2
     medv .pred
@@ -343,13 +428,19 @@ augment(lm_fit, new_data = Boston) %>%
 10  18.9 18.3 
 # ℹ 496 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 ## Multiple linear regression
 
 The multiple linear regression model can be fit in much the same way as the [simple linear regression](03-linear-regression.qmd#simple-linear-regression) model. The only difference is how we specify the predictors. We are using the same formula expression `y ~ x`, but we can specify multiple values by separating them with `+`s.
+
+
 
 
 ::: {.cell}
@@ -362,6 +453,7 @@ lm_fit2
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 parsnip model object
 
@@ -373,11 +465,17 @@ Coefficients:
 (Intercept)        lstat          age  
    33.22276     -1.03207      0.03454  
 ```
+
+
 :::
 :::
+
+
 
 
 Everything else works the same. From extracting parameter estimates
+
+
 
 
 ::: {.cell}
@@ -387,6 +485,7 @@ tidy(lm_fit2)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 3 × 5
   term        estimate std.error statistic   p.value
@@ -395,11 +494,17 @@ tidy(lm_fit2)
 2 lstat        -1.03      0.0482    -21.4  8.42e- 73
 3 age           0.0345    0.0122      2.83 4.91e-  3
 ```
+
+
 :::
 :::
+
+
 
 
 to predicting new values
+
+
 
 
 ::: {.cell}
@@ -409,6 +514,7 @@ predict(lm_fit2, new_data = Boston)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 # A tibble: 506 × 1
    .pred
@@ -425,11 +531,17 @@ predict(lm_fit2, new_data = Boston)
 10 18.5 
 # ℹ 496 more rows
 ```
+
+
 :::
 :::
+
+
 
 
 A shortcut when using formulas is to use the form `y ~ .` which means; set `y` as the response and set the remaining variables as predictors. This is very useful if you have a lot of variables and you don't want to type them out.
+
+
 
 
 ::: {.cell}
@@ -442,6 +554,7 @@ lm_fit3
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 parsnip model object
 
@@ -457,8 +570,12 @@ Coefficients:
       black        lstat  
   9.312e-03   -5.248e-01  
 ```
+
+
 :::
 :::
+
+
 
 
 For more formula syntax look at `?formula`.
@@ -475,6 +592,8 @@ There are two ways on including an interaction term; `x:y` and `x * y`
 with that out of the way let expand `lm_fit2` by adding an interaction term
 
 
+
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -485,6 +604,7 @@ lm_fit4
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 parsnip model object
 
@@ -496,8 +616,12 @@ Coefficients:
 (Intercept)        lstat          age    lstat:age  
  36.0885359   -1.3921168   -0.0007209    0.0041560  
 ```
+
+
 :::
 :::
+
+
 
 
 note that the interaction term is named `lstat:age`.
@@ -505,6 +629,8 @@ note that the interaction term is named `lstat:age`.
 Sometimes we want to perform transformations, and we want those transformations to be applied, as part of the model fit as a pre-processing step. We will use the recipes package for this task.
 
 We use the `step_interact()` to specify the interaction term. Next, we create a workflow object to combine the linear regression model specification `lm_spec` with the pre-processing specification `rec_spec_interact` which can then be fitted much like a parsnip model specification.
+
+
 
 
 ::: {.cell}
@@ -521,6 +647,7 @@ lm_wf_interact %>% fit(Boston)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 ══ Workflow [trained] ══════════════════════════════════════════════════════════
 Preprocessor: Recipe
@@ -540,8 +667,12 @@ Coefficients:
 (Intercept)        lstat          age  lstat_x_age  
  36.0885359   -1.3921168   -0.0007209    0.0041560  
 ```
+
+
 :::
 :::
+
+
 
 
 Notice that since we specified the variables in the recipe we don't need to specify them when fitting the workflow object. Furthermore, take note of the name of the interaction term. `step_interact()` tries to avoid special characters in variables.
@@ -551,6 +682,8 @@ Notice that since we specified the variables in the recipe we don't need to spec
 Much like we could use recipes to create interaction terms between values are we able to apply transformations to individual variables as well. If you are familiar with the dplyr package then you know how to `mutate()` which works in much the same way using `step_mutate()`.
 
 You would want to keep as much of the pre-processing inside recipes such that the transformation will be applied consistently to new data.
+
+
 
 
 ::: {.cell}
@@ -567,6 +700,7 @@ lm_wf_pow2 %>% fit(Boston)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 ══ Workflow [trained] ══════════════════════════════════════════════════════════
 Preprocessor: Recipe
@@ -586,11 +720,17 @@ Coefficients:
 (Intercept)        lstat       lstat2  
    42.86201     -2.33282      0.04355  
 ```
+
+
 :::
 :::
+
+
 
 
 You don't have to hand-craft every type of linear transformation since recipes have a bunch created already [here](https://recipes.tidymodels.org/reference/index.html#section-step-functions-individual-transformations) such as `step_log()` to take logarithms of variables.
+
+
 
 
 ::: {.cell}
@@ -607,6 +747,7 @@ lm_wf_log %>% fit(Boston)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 ══ Workflow [trained] ══════════════════════════════════════════════════════════
 Preprocessor: Recipe
@@ -626,8 +767,12 @@ Coefficients:
 (Intercept)        lstat  
       52.12       -12.48  
 ```
+
+
 :::
 :::
+
+
 
 
 ## Qualitative predictors
@@ -641,6 +786,8 @@ We will now turn our attention to the `Carseats` data set. We will attempt to pr
 If you pass such a variable to `lm()` it will read it and generate dummy variables automatically using the following convention.
 
 
+
+
 ::: {.cell}
 
 ```{.r .cell-code}
@@ -650,17 +797,24 @@ Carseats %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
        Good Medium
 Bad       0      0
 Good      1      0
 Medium    0      1
 ```
+
+
 :::
 :::
+
+
 
 
 So we have no problems including qualitative predictors when using `lm` as the engine.
+
+
 
 
 ::: {.cell}
@@ -671,6 +825,7 @@ lm_spec %>%
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 parsnip model object
 
@@ -689,12 +844,18 @@ Coefficients:
 Income:Advertising           Price:Age  
          0.0007510           0.0001068  
 ```
+
+
 :::
 :::
+
+
 
 
 However, as with so many things, we can not always guarantee that the underlying engine knows how to deal with qualitative variables. Recipes can be used to handle this as well. The `step_dummy()` will perform the same transformation of turning 1 qualitative with `C` levels into `C-1` indicator variables.
 While this might seem unnecessary right now, some of the engines, later on, do not handle qualitative variables and this step would be necessary. We are also using the `all_nominal_predictors()` selector to select all character and factor predictor variables. This allows us to select by type rather than having to type out the names.
+
+
 
 
 ::: {.cell}
@@ -712,6 +873,7 @@ lm_wf %>% fit(Carseats)
 ```
 
 ::: {.cell-output .cell-output-stdout}
+
 ```
 ══ Workflow [trained] ══════════════════════════════════════════════════════════
 Preprocessor: Recipe
@@ -740,8 +902,12 @@ Coefficients:
 Income_x_Advertising           Price_x_Age  
            0.0007510             0.0001068  
 ```
+
+
 :::
 :::
+
+
 
 
 ## Writing functions
